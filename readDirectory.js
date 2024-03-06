@@ -1,41 +1,29 @@
-const fs = require('fs');
-const path = require('path');
+// readDirectory.js
 
-const dirname = 'simple-directory';
-
-// Verzeichnis auslesen
-const files = fs.readdirSync(dirname);
-
-const result = {
-    fileTypes: [],
-    fileCounts: [],
-    fileSizes: []
-};
-
-files.forEach(file => {
-    const filePath = path.join(dirname, file);
-
-    // Dateityp ermitteln (hier wird nach dem Punkt im Dateinamen gesucht)
-    const fileType = path.extname(file);
-
-    // Dateigröße ermitteln
-    const fileStats = fs.statSync(filePath);
-    const fileSize = fileStats.size;
-
-    // Update des Ergebnisobjekts
-    if (!result.fileTypes.includes(fileType)) {
-        result.fileTypes.push(fileType);
-        result.fileCounts.push(1);
-        result.fileSizes.push(fileSize);
-    } else {
-        const index = result.fileTypes.indexOf(fileType);
-        result.fileCounts[index]++;
-        result.fileSizes[index] += fileSize;
+// Run recursive function in directory
+/**
+ *
+ * @param {string} directoryPath
+ */
+function readDir(directoryPath) {
+    const entries = fs.readdirSync(directoryPath, { withFileTypes: true });
+    for (const entry of entries) {
+      // ignoriere bestimmte Ordner (Variable muss im Script angegeben oder Zeile gelöscht werden)
+      if (ignoreFolders.includes(entry.name)) continue;
+      // Recursiv: Wenn es ein Ordner ist, rufe die Funktion wieder auf.
+      if (entry.isDirectory()) {
+        readDir(path.join(directoryPath, entry.name));
+      }
+      // Wenn es ein File ist, relevante Informationen zusammenfassen und in ein Array pushen
+      // Eventuell könnte fs.statSync verwendet werden
+      // Size könnte ein wichtiger Wert sein.
+      if (entry.isFile()) {
+        const filePath = path.join(directoryPath, entry.name);
+        const fileType = path.extname(entry.name);
+        const fileStats = fs.statSync(filePath);
+        const fileSize = fileStats.size;
+        // Hier könntest du die Informationen weiterverarbeiten oder in ein Array pushen
+      }
     }
-});
-
-// Ergebnisobjekt als JSON speichern
-const jsonResult = JSON.stringify(result, null, 2);
-fs.writeFileSync('directoryResults.json', jsonResult);
-
-console.log('Directory results saved to directoryResults.json');
+  }
+  
