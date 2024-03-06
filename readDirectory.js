@@ -1,40 +1,41 @@
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
-const dirname = "simple-directory";
-const testData = [
-    { name: "file1.txt", type: ".txt", size: 500 },
-    { name: "file2.md", type: ".md", size: 800 },
-    // Füge hier weitere Testdaten hinzu
-];
+const dirname = 'simple-directory';
 
-// Remove old directory and create a new directory
-if (fs.existsSync(dirname)) {
-    fs.rmSync(dirname, { recursive: true, force: true });
-}
+// Verzeichnis auslesen
+const files = fs.readdirSync(dirname);
 
-fs.mkdirSync(dirname);
+const result = {
+    fileTypes: [],
+    fileCounts: [],
+    fileSizes: []
+};
 
-// Add files to the new directory
-testData.forEach(createNewFile);
+files.forEach(file => {
+    const filePath = path.join(dirname, file);
 
-function createNewFile(data) {
-    const fileSize = data.size;
-    let fileInput = "";
-    
-    for (let i = 0; i < fileSize; i++) {
-        // Du könntest hier auch echten Dateiinhalt einfügen
-        fileInput += "A";
+    // Dateityp ermitteln (hier wird nach dem Punkt im Dateinamen gesucht)
+    const fileType = path.extname(file);
+
+    // Dateigröße ermitteln
+    const fileStats = fs.statSync(filePath);
+    const fileSize = fileStats.size;
+
+    // Update des Ergebnisobjekts
+    if (!result.fileTypes.includes(fileType)) {
+        result.fileTypes.push(fileType);
+        result.fileCounts.push(1);
+        result.fileSizes.push(fileSize);
+    } else {
+        const index = result.fileTypes.indexOf(fileType);
+        result.fileCounts[index]++;
+        result.fileSizes[index] += fileSize;
     }
+});
 
-    const filename = `${data.name}`;
-    const filePath = path.join(dirname, filename);
+// Ergebnisobjekt als JSON speichern
+const jsonResult = JSON.stringify(result, null, 2);
+fs.writeFileSync('directoryResults.json', jsonResult);
 
-    fs.writeFileSync(filePath, fileInput, { encoding: "utf8" });
-}
-
-// Optionally, save the testData as JSON
-const jsonTestData = JSON.stringify(testData, null, 2);
-fs.writeFileSync('testData.json', jsonTestData);
-
-console.log('Test data saved to testData.json');
+console.log('Directory results saved to directoryResults.json');
